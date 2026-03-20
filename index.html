@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>666.ms — IP 洁净度检测</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fc;
+    --bg2: #ffffff;
+    --bg3: #f0f2f8;
+    --border: #e4e8f0;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --text: #0f172a;
+    --text2: #475569;
+    --text3: #94a3b8;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --green-border: #bbf7d0;
+    --yellow: #b45309;
+    --yellow-bg: #fffbeb;
+    --yellow-border: #fde68a;
+    --orange: #c2410c;
+    --orange-bg: #fff7ed;
+    --orange-border: #fed7aa;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --red-border: #fecaca;
+    --blue-bg: #eff6ff;
+    --blue-border: #bfdbfe;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Noto Sans SC', sans-serif;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle dot grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 20px 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    margin: 0 -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--text3); font-weight: 400; font-size: 12px; margin-left: 8px; letter-spacing: 0; }
+
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 52px 0 40px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .hero h1 span {
+    color: var(--accent);
+  }
+
+  .hero p {
+    color: var(--text2);
+    font-size: 15px;
+    font-weight: 300;
+  }
+
+  /* Search box */
+  .search-box {
+    display: flex;
+    gap: 10px;
+    max-width: 600px;
+    margin: 32px auto 0;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow);
+  }
+
+  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+
+  .search-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+  }
+
+  .search-btn:hover { opacity: 0.9; }
+  .search-btn:active { transform: scale(0.98); }
+  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px 0;
+    display: none;
+  }
+
+  .loading-dots {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  .loading p { color: var(--text2); font-family: var(--mono); font-size: 13px; }
+
+  /* Results */
+  #results { display: none; padding-bottom: 60px; }
+
+  /* Score card */
+  .score-card {
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin: 32px 0 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .score-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--score-color, var(--green));
+    border-radius: 4px 0 0 4px;
+  }
+
+  .score-ip {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .score-location {
+    color: var(--text2);
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .score-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .tag-green  { background: var(--green-bg);   color: var(--green);  border: 1px solid var(--green-border); }
+  .tag-yellow { background: var(--yellow-bg);  color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .tag-orange { background: var(--orange-bg);  color: var(--orange); border: 1px solid var(--orange-border); }
+  .tag-red    { background: var(--red-bg);     color: var(--red);    border: 1px solid var(--red-border); }
+  .tag-blue   { background: var(--blue-bg);    color: var(--accent); border: 1px solid var(--blue-border); }
+  .tag-gray   { background: var(--bg3);        color: var(--text2);  border: 1px solid var(--border); }
+
+  .score-circle {
+    text-align: center;
+    min-width: 110px;
+  }
+
+  .score-num {
+    font-family: var(--mono);
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--score-color, var(--green));
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  .score-bar {
+    height: 5px;
+    background: var(--bg3);
+    border-radius: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    background: var(--score-color, var(--green));
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  /* Scene cards */
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 28px 0 12px;
+    font-family: var(--mono);
+  }
+
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+    gap: 10px;
+  }
+
+  .scene-card {
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+
+  .scene-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: #d1d9e8;
+  }
+
+  .scene-icon {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  .scene-name {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .scene-verdict {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .verdict-good { color: var(--green); }
+  .verdict-warn { color: var(--yellow); }
+  .verdict-bad  { color: var(--red); }
+  .verdict-unknown { color: var(--text3); }
+
+  /* Info grid */
+  .info-grid {
+    background: var(--bg2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .info-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    border-bottom: 1px solid var(--border);
+    min-height: 44px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-key {
+    padding: 12px 16px;
+    background: var(--bg3);
+    color: var(--text3);
+    font-size: 12px;
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .info-val {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+  }
+
+  /* Risk bar */
+  .risk-bar-wrap { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .risk-bar-bg {
+    flex: 1;
+    height: 5px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .risk-bar-inner {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease;
+  }
+
+  /* Error */
+  .error-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--red);
+    font-family: var(--mono);
+    font-size: 14px;
+    display: none;
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 0;
+    text-align: center;
+    color: var(--text3);
+    font-size: 12px;
+    font-family: var(--mono);
+    position: relative;
+    z-index: 1;
+    background: var(--bg2);
+  }
+
+  footer a { color: var(--text3); text-decoration: none; }
+  footer a:hover { color: var(--text2); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 26px; }
+    .score-card { grid-template-columns: 1fr; }
+    .score-circle { display: flex; align-items: center; gap: 16px; }
+    .score-num { font-size: 36px; }
+    .scene-grid { grid-template-columns: repeat(2, 1fr); }
+    .info-row { grid-template-columns: 100px 1fr; }
+  }
+
+  /* Pulse animation */
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+    vertical-align: middle;
+  }
+
+  /* Fade in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fadeUp 0.35s ease forwards; }
+  .fade-in-d1 { animation-delay: 0.1s; opacity: 0; }
+  .fade-in-d2 { animation-delay: 0.2s; opacity: 0; }
+  .fade-in-d3 { animation-delay: 0.3s; opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">666.ms <span>IP 洁净度检测</span></div>
+    <div class="header-badge"><span class="live-dot"></span>实时检测</div>
+  </header>
+
+  <div class="hero">
+    <h1>你的 IP <span>够干净</span>吗？</h1>
+    <p>检测 IP 风控值、类型、归属地，判断是否适合注册海外账号</p>
+
+    <div class="search-box">
+      <input
+        type="text"
+        class="search-input"
+        id="ipInput"
+        placeholder="输入 IP 地址，或留空检测当前 IP"
+        spellcheck="false"
+        autocomplete="off"
+      >
+      <button class="search-btn" id="searchBtn" onclick="doCheck()">检 测</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <p>正在查询 IP 数据...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-msg" id="errorMsg">查询失败，请检查 IP 格式或稍后重试</div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- Score Card -->
+    <div class="score-card fade-in" id="scoreCard">
+      <div>
+        <div class="score-ip" id="resIP">—</div>
+        <div class="score-location" id="resLocation">—</div>
+        <div class="score-tags" id="resTags"></div>
+      </div>
+      <div class="score-circle">
+        <div class="score-num" id="scoreNum">—</div>
+        <div class="score-label">风控值</div>
+        <div class="score-bar">
+          <div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene checks -->
+    <div class="section-title fade-in fade-in-d1">场景适用性</div>
+    <div class="scene-grid fade-in fade-in-d1" id="sceneGrid"></div>
+
+    <!-- IP Details -->
+    <div class="section-title fade-in fade-in-d2">详细信息</div>
+    <div class="info-grid fade-in fade-in-d2" id="infoGrid"></div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    666.ms &nbsp;·&nbsp; 数据来源：ip-api.com / ipinfo.io &nbsp;·&nbsp;
+    <a href="mailto:haoxzhang@gmail.com">联系我们</a>
+  </div>
+</footer>
+
+<script>
+// ─── 工具函数 ─────────────────────────────────────────
+
+function getRiskColor(score) {
+  if (score <= 20) return 'var(--green)';
+  if (score <= 50) return 'var(--yellow)';
+  if (score <= 75) return 'var(--orange)';
+  return 'var(--red)';
+}
+
+function getRiskLabel(score) {
+  if (score <= 20) return '极度纯净';
+  if (score <= 50) return '较为纯净';
+  if (score <= 75) return '风险偏高';
+  return '高风险';
+}
+
+function getSceneVerdict(risk, ipType, isProxy) {
+  // 场景判断逻辑
+  const clean = risk <= 25 && !isProxy;
+  const ok    = risk <= 50;
+  const bad   = risk > 75 || isProxy;
+
+  return {
+    chatgpt: bad ? 'bad' : clean ? 'good' : 'warn',
+    netflix: (ipType === 'Residential' || ipType === 'ISP') && risk <= 30 ? 'good' : bad ? 'bad' : 'warn',
+    ecom:    clean ? 'good' : ok ? 'warn' : 'bad',
+    game:    risk <= 40 ? 'good' : ok ? 'warn' : 'bad',
+    google:  bad ? 'bad' : clean ? 'good' : 'warn',
+    ads:     clean ? 'good' : ok ? 'warn' : 'bad',
+  };
+}
+
+function verdictText(v) {
+  if (v === 'good') return { label: '✓ 推荐使用', cls: 'verdict-good' };
+  if (v === 'warn') return { label: '△ 谨慎使用', cls: 'verdict-warn' };
+  if (v === 'bad')  return { label: '✕ 不建议',   cls: 'verdict-bad' };
+  return { label: '— 未知', cls: 'verdict-unknown' };
+}
+
+function ipTypeTag(t) {
+  const map = {
+    'Residential': ['家庭宽带 IP', 'tag-green'],
+    'ISP':         ['ISP IP', 'tag-blue'],
+    'Hosting':     ['数据中心 IP', 'tag-orange'],
+    'Business':    ['商业 IP', 'tag-blue'],
+  };
+  return map[t] || ['未知类型', 'tag-gray'];
+}
+
+// ─── 主查询逻辑 ──────────────────────────────────────
+
+async function doCheck() {
+  const input = document.getElementById('ipInput').value.trim();
+  const btn   = document.getElementById('searchBtn');
+
+  // UI state
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('errorMsg').style.display = 'none';
+  document.getElementById('loading').style.display  = 'block';
+  btn.disabled = true;
+  btn.textContent = '查询中…';
+
+  try {
+    // ip-api.com 免费，支持 IPv4/IPv6，字段丰富
+    const target = input || '';
+    const url = `https://ip-api.com/json/${target}?fields=status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,mobile,proxy,hosting,query&lang=zh-CN`;
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (data.status !== 'success') throw new Error(data.message || '查询失败');
+
+    renderResults(data);
+  } catch (e) {
+    document.getElementById('loading').style.display  = 'none';
+    document.getElementById('errorMsg').style.display = 'block';
+    document.getElementById('errorMsg').textContent   = '查询失败：' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '检 测';
+  }
+}
+
+function renderResults(d) {
+  // ── 风控值估算（基于 ip-api 字段） ──
+  let risk = 5;
+  if (d.proxy)   risk += 55;
+  if (d.hosting) risk += 40;
+  if (d.mobile)  risk += 5;
+  // 数据中心段额外加分
+  const dcKeywords = ['amazon', 'google', 'microsoft', 'alibaba', 'tencent', 'cloudflare', 'digitalocean', 'linode', 'vultr', 'ovh', 'hetzner', 'hosting', 'datacenter', 'server'];
+  const orgLow = (d.org || '').toLowerCase() + (d.isp || '').toLowerCase();
+  if (dcKeywords.some(k => orgLow.includes(k))) risk += 25;
+  risk = Math.min(risk, 98);
+
+  const riskColor = getRiskColor(risk);
+  const riskLabel = getRiskLabel(risk);
+
+  // IP 类型
+  let ipType = 'Residential';
+  if (d.hosting) ipType = 'Hosting';
+  else if (d.proxy) ipType = 'Proxy';
+  else if (d.mobile) ipType = 'Mobile';
+  else if (dcKeywords.some(k => orgLow.includes(k))) ipType = 'Hosting';
+
+  // ── 渲染 Score Card ──
+  const card = document.getElementById('scoreCard');
+  card.style.setProperty('--score-color', riskColor);
+
+  document.getElementById('resIP').textContent = d.query;
+  document.getElementById('resLocation').textContent =
+    `${d.country}  ${d.regionName}  ${d.city}  ${d.timezone}`;
+
+  const scoreNum = document.getElementById('scoreNum');
+  scoreNum.textContent = risk + '%';
+  scoreNum.style.color = riskColor;
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = risk + '%';
+    document.getElementById('scoreBarFill').style.background = riskColor;
+  }, 100);
+
+  // Tags
+  const tagsEl = document.getElementById('resTags');
+  tagsEl.innerHTML = '';
+  const [typeLabel, typeCls] = ipTypeTag(ipType);
+  tagsEl.innerHTML += `<span class="tag ${typeCls}">${typeLabel}</span>`;
+  tagsEl.innerHTML += `<span class="tag ${risk<=20?'tag-green':risk<=50?'tag-yellow':'tag-red'}">${riskLabel}</span>`;
+  if (d.proxy)   tagsEl.innerHTML += `<span class="tag tag-red">代理/VPN</span>`;
+  if (d.hosting) tagsEl.innerHTML += `<span class="tag tag-orange">数据中心</span>`;
+  if (d.mobile)  tagsEl.innerHTML += `<span class="tag tag-blue">移动网络</span>`;
+  tagsEl.innerHTML += `<span class="tag tag-gray">${d.asname || d.isp}</span>`;
+
+  // ── 场景卡片 ──
+  const scenes = getSceneVerdict(risk, ipType, d.proxy);
+  const sceneData = [
+    { key: 'chatgpt', icon: '🤖', name: 'ChatGPT / OpenAI' },
+    { key: 'netflix', icon: '🎬', name: 'Netflix 流媒体' },
+    { key: 'google',  icon: '🔍', name: 'Google 账号' },
+    { key: 'ecom',    icon: '🛒', name: '跨境电商运营' },
+    { key: 'game',    icon: '🎮', name: '游戏加速节点' },
+    { key: 'ads',     icon: '📣', name: '广告投放账号' },
+  ];
+
+  const sceneGrid = document.getElementById('sceneGrid');
+  sceneGrid.innerHTML = sceneData.map(s => {
+    const v = verdictText(scenes[s.key]);
+    return `
+      <div class="scene-card">
+        <div class="scene-icon">${s.icon}</div>
+        <div class="scene-name">${s.name}</div>
+        <div class="scene-verdict ${v.cls}">${v.label}</div>
+      </div>`;
+  }).join('');
+
+  // ── 详细信息 ──
+  const infoRows = [
+    ['IP 地址',  d.query],
+    ['归属地',   `${d.country} / ${d.regionName} / ${d.city}`],
+    ['邮政编码', d.zip || '—'],
+    ['时区',     d.timezone],
+    ['ASN',      d.as],
+    ['ISP',      d.isp],
+    ['组织',     d.org || '—'],
+    ['代理/VPN', d.proxy ? '✕ 是' : '✓ 否'],
+    ['数据中心', d.hosting ? '✕ 是' : '✓ 否'],
+    ['移动网络', d.mobile ? '是' : '否'],
+    ['风控估算', `${risk}% — ${riskLabel}`, true, risk, riskColor],
+  ];
+
+  document.getElementById('infoGrid').innerHTML = infoRows.map(([k, v, isRisk, riskVal, color]) => {
+    let valHtml = `<span>${v}</span>`;
+    if (isRisk) {
+      valHtml = `
+        <div class="risk-bar-wrap">
+          <span style="color:${color};font-weight:600;min-width:50px">${riskVal}%</span>
+          <div class="risk-bar-bg">
+            <div class="risk-bar-inner" style="width:${riskVal}%;background:${color}"></div>
+          </div>
+          <span style="color:${color}">${getRiskLabel(riskVal)}</span>
+        </div>`;
+    }
+    return `
+      <div class="info-row">
+        <div class="info-key">${k}</div>
+        <div class="info-val">${valHtml}</div>
+      </div>`;
+  }).join('');
+
+  // Show results
+  document.getElementById('loading').style.display  = 'none';
+  document.getElementById('results').style.display  = 'block';
+}
+
+// ─── 回车触发 ────────────────────────────────────────
+document.getElementById('ipInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doCheck();
+});
+
+// ─── 自动检测当前 IP ──────────────────────────────────
+window.addEventListener('load', () => {
+  doCheck();
+});
+</script>
+</body>
+</html>
