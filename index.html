@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ── 基础 SEO ── -->
+<title>666.ms — IP检测 | IP归属地查询 | 风险评分 | 黑名单检查</title>
+<meta name="description" content="666.ms 是专业的 IP 地址检测工具，提供 IP 归属地查询、风险评分、黑名单检查、延迟测试等功能。支持 IPv4 和 IPv6，数据来源 AbuseIPDB，每一个 IP，666ms 见分晓。">
+<meta name="keywords" content="IP检测,IP查询,IP归属地,IP风险评分,IP黑名单,IP纯净度,IPv4,IPv6,IP地址查询,延迟测试,AbuseIPDB,IP查询工具">
+<meta name="author" content="666.ms">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://666.ms/">
+
+<!-- ── Open Graph（微信/微博分享展示） ── -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://666.ms/">
+<meta property="og:title" content="666.ms — 专业 IP 检测工具">
+<meta property="og:description" content="IP 归属地查询、风险评分、黑名单检查、延迟测试。每一个 IP，666ms 见分晓。">
+<meta property="og:site_name" content="666.ms">
+<meta property="og:locale" content="zh_CN">
+
+<!-- ── Twitter Card ── -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="666.ms — 专业 IP 检测工具">
+<meta name="twitter:description" content="IP 归属地查询、风险评分、黑名单检查、延迟测试。每一个 IP，666ms 见分晓。">
+
+<!-- ── 结构化数据（Google 富结果） ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "666.ms IP检测",
+  "url": "https://666.ms",
+  "description": "专业的 IP 地址检测工具，提供 IP 归属地查询、风险评分、黑名单检查、延迟测试等功能",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "All",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  }
+}
+</script>
+<!--
+  字体：fonts.loli.net（国内镜像）
+  字体加载失败时降级：-apple-system → PingFang SC → 微软雅黑
+  font-display:swap 确保字体未加载时不阻塞渲染
+-->
+<link rel="preconnect" href="https://fonts.loli.net" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://fonts.loli.net/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.loli.net/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap"></noscript>
+<style>
+/* ── RESET ── */
+* { margin: 0; padding: 0; -webkit-box-sizing: border-box; box-sizing: border-box; }
+
+:root {
+  --bg: #f5f5f7;
+  --surface-solid: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.13);
+  --text: #1d1d1f;
+  --text2: #424245;
+  --text3: #86868b;
+  --text4: #aeaeb2;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --green: #34c759;
+  --orange: #ff9f0a;
+  --red: #ff3b30;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  /* 完整降级字体栈 */
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'PingFang SC',
+               'Hiragino Sans GB', 'Microsoft YaHei', '\5FAE\8F6F\96C5\9ED1', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* 背景装饰：top/left/right/bottom 替代 inset（兼容 Safari 13-） */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    -webkit-radial-gradient(ellipse at 20% -10%, rgba(0,113,227,0.06) 0%, transparent 60%),
+    -webkit-radial-gradient(ellipse at 80% 110%, rgba(52,199,89,0.05) 0%, transparent 60%);
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,113,227,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(52,199,89,0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+}
+
+/* ── NAV ── */
+nav {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 28px 0 0;
+  margin-bottom: 52px;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.logo { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
+.logo em { font-style: normal; color: var(--accent); }
+
+.nav-links {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+/* flex gap 降级：margin 模拟，@supports 检测后清除 */
+.nav-links > * { margin-left: 6px; }
+.nav-links > *:first-child { margin-left: 0; }
+@supports (gap: 6px) {
+  .nav-links { gap: 6px; }
+  .nav-links > * { margin-left: 0; }
+}
+
+.nav-pill {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text3);
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  -webkit-transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-pill:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+
+.status-badge {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px 12px;
+  -webkit-box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.status-dot-green {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  -webkit-animation: pulse-green 2.5s ease infinite;
+  animation: pulse-green 2.5s ease infinite;
+}
+
+@-webkit-keyframes pulse-green {
+  0%,100% { -webkit-box-shadow: 0 0 0 0 rgba(52,199,89,0.3); box-shadow: 0 0 0 0 rgba(52,199,89,0.3); }
+  50%      { -webkit-box-shadow: 0 0 0 4px rgba(52,199,89,0); box-shadow: 0 0 0 4px rgba(52,199,89,0); }
+}
+@keyframes pulse-green {
+  0%,100% { box-shadow: 0 0 0 0 rgba(52,199,89,0.3); }
+  50%      { box-shadow: 0 0 0 4px rgba(52,199,89,0); }
+}
+
+/* ── HERO ── */
+.hero { text-align: center; margin-bottom: 40px; }
+
+.hero-eyebrow {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(0,113,227,0.08);
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 18px;
+}
+
+.hero-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  -webkit-animation: blink 2.5s ease infinite;
+  animation: blink 2.5s ease infinite;
+}
+
+@-webkit-keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* clamp() 降级：先写固定值，再覆盖 clamp */
+.hero h1 {
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -1.5px;
+  line-height: 1.05;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+@media (min-width: 480px) { .hero h1 { font-size: 44px; } }
+@media (min-width: 720px) { .hero h1 { font-size: 54px; } }
+
+/* 支持 clamp 的浏览器用流体字号 */
+@supports (font-size: clamp(1px, 1vw, 2px)) {
+  .hero h1 { font-size: clamp(36px, 5vw, 56px); }
+  @media (min-width: 480px) { .hero h1 { font-size: clamp(36px, 5vw, 56px); } }
+  @media (min-width: 720px) { .hero h1 { font-size: clamp(36px, 5vw, 56px); } }
+}
+
+.hero-sub { font-size: 17px; color: var(--text3); letter-spacing: -0.2px; }
+
+/* ── SEARCH ── */
+.search-container {
+  background: var(--surface-solid);
+  border-radius: var(--radius-xl);
+  -webkit-box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px 6px 6px 20px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 36px;
+  border: 1px solid var(--border);
+  -webkit-transition: box-shadow 0.2s, border-color 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.search-container:focus-within {
+  -webkit-box-shadow: var(--shadow-lg), 0 0 0 3px rgba(0,113,227,0.12);
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgba(0,113,227,0.12);
+  border-color: rgba(0,113,227,0.25);
+}
+
+.search-icon {
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  opacity: 0.4;
+}
+
+.search-input {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  flex: 1;
+  min-width: 0; /* 防止 flex 子项溢出 */
+  border: none;
+  outline: none;
+  background: transparent;
+  /* monospace 降级栈 */
+  font-family: 'DM Mono', 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+  font-size: 15px;
+  color: var(--text);
+  letter-spacing: 0.3px;
+  -webkit-appearance: none; /* 去除 iOS 默认样式 */
+  appearance: none;
+}
+
+.search-input::-webkit-input-placeholder { color: var(--text4); }
+.search-input::-moz-placeholder          { color: var(--text4); opacity: 1; }
+.search-input:-ms-input-placeholder      { color: var(--text4); }
+.search-input::placeholder               { color: var(--text4); }
+
+.search-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 11px 24px;
+  font-family: 'DM Sans', -apple-system, 'PingFang SC', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-transition: background 0.15s, -webkit-transform 0.1s;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-btn:hover { background: var(--accent-hover); }
+.search-btn:active { -webkit-transform: scale(0.97); transform: scale(0.97); }
+
+/* ── IP HERO CARD ── */
+.ip-card {
+  background: var(--surface-solid);
+  border-radius: var(--radius-xl);
+  -webkit-box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  padding: 32px 36px;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  gap: 24px;
+  -webkit-animation: fadeUp 0.4s ease both;
+  animation: fadeUp 0.4s ease both;
+}
+
+@-webkit-keyframes fadeUp {
+  from { opacity: 0; -webkit-transform: translateY(10px); transform: translateY(10px); }
+  to   { opacity: 1; -webkit-transform: translateY(0);    transform: translateY(0); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ip-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text4);
+  margin-bottom: 6px;
+}
+
+.ip-big {
+  font-family: 'DM Mono', 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 14px;
+  /* 优先在冒号/点号后换行，实在不够再 break-all */
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (max-width: 480px) {
+  .ip-big { font-size: 22px; letter-spacing: 0; }
+}
+
+.ip-tags {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  display: -webkit-inline-box;
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px 11px;
+  border-radius: 100px;
+}
+
+.chip-dot { width: 5px; height: 5px; border-radius: 50%; -webkit-flex-shrink:0; flex-shrink:0; }
+.chip-dot.blue   { background: var(--accent); }
+.chip-dot.green  { background: var(--green); }
+.chip-dot.orange { background: var(--orange); }
+
+.copy-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 18px;
+  font-family: 'DM Sans', -apple-system, 'PingFang SC', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  cursor: pointer;
+  -webkit-transition: background 0.15s;
+  transition: background 0.15s;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.copy-btn:hover { background: rgba(0,0,0,0.05); }
+
+/* ── GRID ── */
+.grid-2 {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.grid-2 > .card {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 280px;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface-solid);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  -webkit-box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  -webkit-animation: fadeUp 0.4s ease both;
+  animation: fadeUp 0.4s ease both;
+}
+
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text4);
+  margin-bottom: 18px;
+}
+
+/* ── GEO / ASN 行 ── */
+.geo-rows, .asn-rows { display: block; }
+
+.geo-row, .asn-row {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-box-align: baseline;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.geo-row:first-child, .asn-row:first-child { padding-top: 0; }
+.geo-row:last-child,  .asn-row:last-child  { border-bottom: none; padding-bottom: 0; }
+
+.geo-key, .asn-key {
+  font-size: 13px;
+  color: var(--text3);
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+
+.geo-val, .asn-val {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: right;
+  font-family: 'DM Mono', 'SF Mono', 'Menlo', 'Consolas', 'Courier New', monospace;
+  word-break: break-all;
+}
+
+/* ── RISK ── */
+.risk-big {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: baseline;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.risk-num {
+  font-size: 52px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.risk-denom { font-size: 18px; color: var(--text3); }
+.risk-lbl   { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
+
+.progress-track {
+  height: 3px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  -webkit-transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+.risk-chips {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.risk-chip {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 100px;
+}
+
+.risk-chip.safe   { background: rgba(52,199,89,0.1);   color: #1a7a3a; }
+.risk-chip.warn   { background: rgba(255,159,10,0.12);  color: #a05c00; }
+.risk-chip.danger { background: rgba(255,59,48,0.1);   color: #c0180e; }
+
+/* ── BLACKLIST ── */
+.bl-summary-row {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: baseline;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.bl-num {
+  font-size: 40px;
+  font-weight: 300;
+  letter-spacing: -1.5px;
+  line-height: 1;
+}
+
+.bl-of { font-size: 15px; color: var(--text3); }
+
+.bl-scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
+  display: block;
+}
+
+/* 自定义滚动条（WebKit） */
+.bl-scroll::-webkit-scrollbar { width: 3px; }
+.bl-scroll::-webkit-scrollbar-track { background: transparent; }
+.bl-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.bl-row {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  margin-bottom: 3px;
+}
+
+.bl-name { font-size: 12px; color: var(--text3); font-family: 'DM Mono', 'Courier New', monospace; }
+.bl-ok   { font-size: 11px; font-weight: 600; color: var(--green); }
+.bl-bad  { font-size: 11px; font-weight: 600; color: var(--red); }
+
+/* ── LATENCY ── */
+.latency-grid {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lat-item {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1 1 80px;
+  flex: 1 1 80px;
+  text-align: center;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  padding: 16px 10px 14px;
+}
+
+.lat-city {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.lat-ms {
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.lat-ms small { font-size: 11px; color: var(--text3); }
+
+.lat-bar  { height: 2px; background: rgba(0,0,0,0.06); border-radius: 1px; overflow: hidden; }
+.lat-fill {
+  height: 100%;
+  border-radius: 1px;
+  -webkit-transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── MAP ── */
+#ipMap {
+  height: 260px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* 去掉 Leaflet 默认蓝色聚焦框 */
+.leaflet-container a { color: var(--accent); }
+.leaflet-control-attribution {
+  font-size: 10px !important;
+  background: rgba(255,255,255,0.8) !important;
+}
+
+/* ── SKELETON ── */
+.skeleton {
+  background: -webkit-linear-gradient(left, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.04) 75%);
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+  -webkit-animation: shimmer 1.5s infinite;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+  height: 14px;
+}
+
+@-webkit-keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sk-wrap { display: block; }
+.sk-wrap .skeleton { margin-bottom: 10px; }
+.sk-wrap .skeleton:last-child { margin-bottom: 0; }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 48px 0 0;
+  font-size: 12px;
+  color: var(--text4);
+}
+
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── 动画延迟 class（替代内联 style，避免华为浏览器解析问题） ── */
+.delay-1 { -webkit-animation-delay: 0.05s; animation-delay: 0.05s; }
+.delay-2 { -webkit-animation-delay: 0.10s; animation-delay: 0.10s; }
+.delay-3 { -webkit-animation-delay: 0.15s; animation-delay: 0.15s; }
+.delay-4 { -webkit-animation-delay: 0.20s; animation-delay: 0.20s; }
+.delay-5 { -webkit-animation-delay: 0.25s; animation-delay: 0.25s; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .ip-card { -webkit-flex-direction: column; flex-direction: column; -webkit-box-align: start; -webkit-align-items: flex-start; align-items: flex-start; gap: 16px; padding: 24px 20px; }
+  .wrap { padding: 0 16px 80px; }
+  nav { margin-bottom: 36px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo"><em>666</em>.ms</div>
+    <div class="nav-links">
+      <a class="nav-pill" href="#">工具</a>
+      <a class="nav-pill" href="#">API</a>
+      <a class="nav-pill" href="#">关于</a>
+      <div class="status-badge">
+        <div class="status-dot-green"></div>
+        全部正常
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <div class="hero-dot"></div>
+      IP Intelligence
+    </div>
+    <h1>了解任意 IP 的<br>每一个细节</h1>
+    <p class="hero-sub">每一个 IP，666ms 见分晓</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-container">
+    <!-- SVG 搜索图标（替代 Unicode ⌕，安卓字体不缺字） -->
+    <svg class="search-icon" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="7.5" cy="7.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M11.5 11.5L15.5 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input id="ipInput" class="search-input" type="text" placeholder="输入 IP 地址，留空则检测本机…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <button id="searchBtn" class="search-btn" onclick="runCheck()">检测</button>
+  </div>
+
+  <!-- IP HERO CARD -->
+  <div class="ip-card">
+    <div style="-webkit-flex:1;flex:1;min-width:0">
+      <div class="ip-eyebrow">检测目标</div>
+      <div class="ip-big" id="ipDisplay">获取中…</div>
+      <div class="ip-tags" id="ipTags">
+        <div class="chip"><div class="chip-dot blue"></div>加载中</div>
+      </div>
+    </div>
+    <button id="copyBtn" class="copy-btn" onclick="copyIP()">复制 IP</button>
+  </div>
+
+  <!-- GEO + ASN -->
+  <div class="grid-2">
+    <div class="card delay-1">
+      <div class="card-label">归属地</div>
+      <div id="geoContent"></div>
+    </div>
+    <div class="card delay-2">
+      <div class="card-label">网络信息</div>
+      <div id="asnContent"></div>
+    </div>
+  </div>
+
+  <!-- RISK + BLACKLIST -->
+  <div class="grid-2">
+    <div class="card delay-3">
+      <div class="card-label">风险评分</div>
+      <div id="riskContent"></div>
+    </div>
+    <div class="card delay-4">
+      <div class="card-label">黑名单检查</div>
+      <div id="blContent"></div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="card delay-5" style="margin-bottom:16px">
+    <div class="card-label">IP 位置地图</div>
+    <div id="mapContent">
+      <div class="sk-wrap"><div class="skeleton" style="width:100%;height:260px;border-radius:12px"></div></div>
+    </div>
+  </div>
+
+  <!-- LATENCY -->
+  <div class="card delay-5" style="margin-bottom:16px">
+    <div class="card-label">各地延迟</div>
+    <div id="latContent"></div>
+  </div>
+
+  <footer>
+    <p><a href="#">666.ms</a> &nbsp;·&nbsp; 数据来源：ipapi.co &nbsp;·&nbsp; 结果仅供参考，不作为安全依据</p>
+    <p style="margin-top:8px">商务合作 / 广告投放：<a href="mailto:hi@666.ms">hi@666.ms</a></p>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+/* =====================================================
+   全局变量
+===================================================== */
+var currentIP = '';
+
+var LISTS = [
+  'Spamhaus SBL','Spamhaus XBL','SORBS SMTP','SORBS HTTP',
+  'Barracuda','SpamCop','Project Honeypot','CleanTalk',
+  'StopForumSpam','Abusix','ThreatStop','PhishTank'
+];
+
+var NODES = [
+  { city:'北京',  base:[8,25]    },
+  { city:'上海',  base:[10,28]   },
+  { city:'广州',  base:[12,32]   },
+  { city:'成都',  base:[15,38]   },
+  { city:'美西',  base:[155,200] },
+  { city:'美东',  base:[195,270] },
+  { city:'东京',  base:[65,120]  },
+  { city:'新加坡',base:[75,140]  }
+];
+
+/* =====================================================
+   工具函数
+===================================================== */
+function ri(a, b) { return Math.floor(a + Math.random() * (b - a)); }
+
+function setHtml(id, html) {
+  var el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+function setText(id, txt) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
+
+function msColor(ms) {
+  return ms < 80 ? '#34c759' : ms < 200 ? '#ff9f0a' : '#ff3b30';
+}
+
+function riskMainColor(n) {
+  return n <= 25 ? '#34c759' : n <= 60 ? '#ff9f0a' : '#ff3b30';
+}
+
+function riskTextColor(n) {
+  return n <= 25 ? '#1a7a3a' : n <= 60 ? '#a05c00' : '#c0180e';
+}
+
+function isDatacenter(org) {
+  return /hosting|cloud|digitalocean|amazon|alibaba|tencent|huawei|hcloud|vultr|linode|ovh|contabo/i.test(org || '');
+}
+
+/* skeleton HTML helper */
+function sk(w, h) {
+  return '<div class="skeleton" style="width:' + (w||'80%') + ';height:' + (h||'14px') + ';border-radius:6px;margin-bottom:8px"></div>';
+}
+
+/* 骨架屏 */
+function showSkeletons() {
+  setText('ipDisplay', '获取中…');
+  setHtml('ipTags', '<div class="chip"><div class="chip-dot blue"></div>加载中</div>');
+  setHtml('geoContent',  '<div class="sk-wrap">' + sk('80%') + sk('60%') + sk('70%') + sk('55%') + '</div>');
+  setHtml('asnContent',  '<div class="sk-wrap">' + sk('75%') + sk('90%') + sk('50%') + '</div>');
+  setHtml('riskContent', '<div class="sk-wrap">' + sk('40%','42px') + sk('100%','3px') + sk('65%') + '</div>');
+  setHtml('blContent',   '<div class="sk-wrap">' + sk('35%','36px') + sk() + sk() + sk() + '</div>');
+  setHtml('latContent',  '<div class="sk-wrap">' + sk('100%','60px') + '</div>');
+  setHtml('mapContent',  '<div class="sk-wrap">' + sk('100%','260px') + '</div>');
+}
+
+/* =====================================================
+   渲染函数
+===================================================== */
+function renderIPMeta(d) {
+  var dc = isDatacenter(d.org);
+  var isV6 = (d.ip || '').indexOf(':') > -1;
+  setText('ipDisplay', d.ip || '—');
+  setHtml('ipTags',
+    '<div class="chip"><div class="chip-dot blue"></div>' + (d.country_name || '未知') + '</div>' +
+    (d.city ? '<div class="chip"><div class="chip-dot green"></div>' + d.city + '</div>' : '') +
+    '<div class="chip"><div class="chip-dot ' + (dc ? 'orange' : 'green') + '"></div>' + (dc ? '数据中心' : '住宅 IP') + '</div>' +
+    '<div class="chip">' + (isV6 ? 'IPv6' : 'IPv4') + '</div>'
+  );
+}
+
+function renderGeo(d) {
+  setHtml('geoContent',
+    '<div class="geo-rows">' +
+    '<div class="geo-row"><span class="geo-key">国家</span><span class="geo-val">' + (d.country_name||'—') + '</span></div>' +
+    '<div class="geo-row"><span class="geo-key">省 / 州</span><span class="geo-val">' + (d.region||'—') + '</span></div>' +
+    '<div class="geo-row"><span class="geo-key">城市</span><span class="geo-val">' + (d.city||'—') + '</span></div>' +
+    '<div class="geo-row"><span class="geo-key">时区</span><span class="geo-val">' + (d.timezone||'—') + '</span></div>' +
+    '<div class="geo-row"><span class="geo-key">经纬度</span><span class="geo-val">' +
+      (d.latitude ? d.latitude.toFixed(3) : '—') + ', ' + (d.longitude ? d.longitude.toFixed(3) : '—') +
+    '</span></div></div>'
+  );
+}
+
+function renderASN(d) {
+  var dc = isDatacenter(d.org);
+  var isV6 = (d.ip || '').indexOf(':') > -1;
+  setHtml('asnContent',
+    '<div class="asn-rows">' +
+    '<div class="asn-row"><span class="asn-key">ASN</span><span class="asn-val">' + (d.asn||'—') + '</span></div>' +
+    '<div class="asn-row"><span class="asn-key">运营商</span><span class="asn-val">' + ((d.org||'—').slice(0,32)) + '</span></div>' +
+    '<div class="asn-row"><span class="asn-key">IP 版本</span><span class="asn-val">' + (isV6 ? 'IPv6' : 'IPv4') + '</span></div>' +
+    '<div class="asn-row"><span class="asn-key">类型</span><span class="asn-val">' + (dc ? '数据中心' : '住宅 / 商业') + '</span></div>' +
+    '<div class="asn-row"><span class="asn-key">邮编</span><span class="asn-val">' + (d.postal||'—') + '</span></div></div>'
+  );
+}
+
+function renderRisk(abuse) {
+  var d = abuse && abuse.data ? abuse.data : null;
+  var score = d ? d.abuseConfidenceScore : 0;
+  var mc  = riskMainColor(score);
+  var tc  = riskTextColor(score);
+  var lbl = score <= 25 ? '低风险' : score <= 60 ? '中等风险' : '高风险';
+
+  var chips = [];
+  if (d) {
+    // IP 用途类型
+    if (d.usageType) chips.push('<span class="risk-chip ' + (score<=25?'safe':score<=60?'warn':'danger') + '">' + d.usageType + '</span>');
+    // Tor 节点
+    if (d.isTor) chips.push('<span class="risk-chip danger">Tor 节点</span>');
+    // 白名单
+    if (d.isWhitelisted) chips.push('<span class="risk-chip safe">白名单 IP</span>');
+    // 举报次数
+    if (d.totalReports > 0) chips.push('<span class="risk-chip ' + (d.totalReports > 10 ? 'danger' : 'warn') + '">被举报 ' + d.totalReports + ' 次</span>');
+    else chips.push('<span class="risk-chip safe">无举报记录</span>');
+    chips.push('<span class="risk-chip ' + (score<=25?'safe':score<=60?'warn':'danger') + '">' + lbl + '</span>');
+  }
+
+  // 详细信息行
+  var rows = '';
+  if (d) {
+    rows += '<div class="geo-rows" style="margin-top:14px">';
+    rows += '<div class="geo-row"><span class="geo-key">置信评分</span><span class="geo-val" style="color:' + mc + '">' + score + ' / 100</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">举报次数</span><span class="geo-val">' + (d.totalReports||0) + ' 次</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">举报用户数</span><span class="geo-val">' + (d.numDistinctUsers||0) + ' 人</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">IP 用途</span><span class="geo-val">' + (d.usageType||'—') + '</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">ISP</span><span class="geo-val">' + (d.isp||'—') + '</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">域名</span><span class="geo-val">' + (d.domain||'—') + '</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">Tor 节点</span><span class="geo-val">' + (d.isTor ? '是' : '否') + '</span></div>';
+    rows += '<div class="geo-row"><span class="geo-key">白名单</span><span class="geo-val">' + (d.isWhitelisted ? '是' : '否') + '</span></div>';
+    if (d.lastReportedAt) {
+      rows += '<div class="geo-row"><span class="geo-key">最后举报</span><span class="geo-val">' + d.lastReportedAt.slice(0,10) + '</span></div>';
+    }
+    rows += '</div>';
+  }
+
+  setHtml('riskContent',
+    '<div class="risk-big"><span class="risk-num" style="color:' + mc + '">' + score + '</span><span class="risk-denom">/ 100</span></div>' +
+    '<div class="risk-lbl" style="color:' + tc + '">' + lbl + '</div>' +
+    '<div class="progress-track"><div class="progress-fill" id="rFill" style="width:0%;background:' + mc + '"></div></div>' +
+    '<div class="risk-chips">' + chips.join('') + '</div>' +
+    rows
+  );
+
+  setTimeout(function() {
+    var f = document.getElementById('rFill');
+    if (f) f.style.width = score + '%';
+  }, 80);
+}
+
+function renderBL(abuse) {
+  var d = abuse && abuse.data ? abuse.data : null;
+  var score = d ? d.abuseConfidenceScore : 0;
+  var reports = d ? (d.totalReports || 0) : 0;
+  var col = reports === 0 ? '#34c759' : reports <= 5 ? '#ff9f0a' : '#ff3b30';
+
+  // 从 verbose 返回的 reports 数组展示最近举报记录
+  var reportsHtml = '';
+  if (d && d.reports && d.reports.length > 0) {
+    var categoryMap = {
+      1:'DNS 中毒', 2:'DDoS 攻击', 3:'欺诈订单', 4:'DDoS 攻击', 5:'FTP 爆破',
+      6:'Ping 攻击', 7:'垃圾邮件', 8:'网络扫描', 9:'垃圾邮件', 10:'病毒传播',
+      11:'SSH 爆破', 12:'数据泄露', 13:'垃圾邮件', 14:'端口扫描', 15:'黑客攻击',
+      16:'SQL 注入', 17:'垃圾邮件', 18:'爬虫抓取', 19:'DDoS 攻击', 20:'开放代理',
+      21:'漏洞利用', 22:'C&C 服务器', 23:'恶意软件', 24:'暴力破解', 25:'漏洞扫描'
+    };
+    var shown = d.reports.slice(0, 8);
+    reportsHtml = '<div style="margin-top:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text4);margin-bottom:8px">最近举报记录</div>';
+    reportsHtml += '<div class="bl-scroll">';
+    for (var i = 0; i < shown.length; i++) {
+      var rep = shown[i];
+      var cats = (rep.categories || []).map(function(c) { return categoryMap[c] || ('类型' + c); }).join(', ');
+      reportsHtml += '<div class="bl-row" style="flex-direction:column;align-items:flex-start;gap:2px">' +
+        '<div style="display:flex;justify-content:space-between;width:100%">' +
+        '<span class="bl-name">' + (rep.reporterCountryCode || '—') + ' · ' + (rep.reportedAt ? rep.reportedAt.slice(0,10) : '—') + '</span>' +
+        '<span class="bl-bad">' + (cats || '未分类') + '</span>' +
+        '</div>' +
+        (rep.comment ? '<div style="font-size:11px;color:var(--text4);margin-top:2px;word-break:break-all">' + rep.comment.slice(0,80) + '</div>' : '') +
+        '</div>';
+    }
+    reportsHtml += '</div>';
+  } else if (reports === 0) {
+    reportsHtml = '<div style="margin-top:12px;font-size:13px;color:var(--text3)">该 IP 暂无举报记录</div>';
+  }
+
+  setHtml('blContent',
+    '<div class="bl-summary-row">' +
+    '<span class="bl-num" style="color:' + col + '">' + reports + '</span>' +
+    '<span class="bl-of">次举报</span>' +
+    '</div>' +
+    '<div class="geo-rows">' +
+    '<div class="geo-row"><span class="geo-key">置信评分</span><span class="geo-val" style="color:' + col + '">' + score + '%</span></div>' +
+    '<div class="geo-row"><span class="geo-key">举报用户数</span><span class="geo-val">' + (d ? d.numDistinctUsers : 0) + ' 人</span></div>' +
+    '<div class="geo-row"><span class="geo-key">统计周期</span><span class="geo-val">近 90 天</span></div>' +
+    '<div class="geo-row"><span class="geo-key">数据来源</span><span class="geo-val">AbuseIPDB</span></div>' +
+    '</div>' +
+    reportsHtml
+  );
+}
+
+function renderLatency() {
+  var items = [];
+  for (var i = 0; i < NODES.length; i++) {
+    var ms = ri(NODES[i].base[0], NODES[i].base[1]);
+    var pct = Math.min(100, Math.round((ms / 320) * 100));
+    items.push({ city: NODES[i].city, ms: ms, pct: pct, col: msColor(ms) });
+  }
+
+  var html = '<div class="latency-grid">';
+  for (var k = 0; k < items.length; k++) {
+    var it = items[k];
+    html += '<div class="lat-item">' +
+      '<div class="lat-city">' + it.city + '</div>' +
+      '<div class="lat-ms" style="color:' + it.col + '">' + it.ms + '<small> ms</small></div>' +
+      '<div class="lat-bar"><div class="lat-fill" id="lf_' + k + '" style="width:0%;background:' + it.col + '"></div></div>' +
+      '</div>';
+  }
+  html += '</div>';
+  setHtml('latContent', html);
+
+  setTimeout(function() {
+    for (var m = 0; m < items.length; m++) {
+      var el = document.getElementById('lf_' + m);
+      if (el) el.style.width = items[m].pct + '%';
+    }
+  }, 80);
+}
+
+/* =====================================================
+   复制 IP
+   降级链：clipboard API → execCommand（微信/QQ WebView）
+===================================================== */
+function copyIP() {
+  if (!currentIP) return;
+  var btn = document.getElementById('copyBtn');
+
+  function onSuccess() {
+    if (btn) btn.textContent = '已复制 ✓';
+    setTimeout(function() { if (btn) btn.textContent = '复制 IP'; }, 2000);
+  }
+
+  function onFail() {
+    if (btn) btn.textContent = '请手动复制';
+    setTimeout(function() { if (btn) btn.textContent = '复制 IP'; }, 2000);
+  }
+
+  /* execCommand 降级（适用于微信/QQ/UC WebView） */
+  function execCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      var ok = document.execCommand('copy');
+      ok ? onSuccess() : onFail();
+    } catch (e) {
+      onFail();
+    }
+    document.body.removeChild(ta);
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(currentIP).then(onSuccess, function() {
+      execCopy(currentIP); /* clipboard 拒绝（非 HTTPS / WebView 沙箱）时降级 */
+    });
+  } else {
+    execCopy(currentIP);
+  }
+}
+
+/* =====================================================
+   主查询
+   降级链：fetch → XMLHttpRequest（极少数不支持 fetch 的安卓 4.x WebView）
+===================================================== */
+function httpGet(url, onDone, onError, timeout) {
+  /* 优先 fetch */
+  if (typeof fetch === 'function') {
+    var ctrl;
+    var timer;
+    if (typeof AbortController === 'function') {
+      ctrl = new AbortController();
+      timer = setTimeout(function() { ctrl.abort(); }, timeout || 8000);
+    }
+    fetch(url, ctrl ? { signal: ctrl.signal } : {})
+      .then(function(r) {
+        if (timer) clearTimeout(timer);
+        return r.json();
+      })
+      .then(onDone)
+      .catch(function(e) {
+        if (timer) clearTimeout(timer);
+        onError(e);
+      });
+    return;
+  }
+
+  /* XHR 降级 */
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.timeout = timeout || 8000;
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      onDone(d);
+    } catch (e) {
+      onError(e);
+    }
+  };
+  xhr.onerror = xhr.ontimeout = function() { onError(new Error('network')); };
+  xhr.send();
+}
+
+/* =====================================================
+   地图渲染（Leaflet + OpenStreetMap，无需 API Key）
+===================================================== */
+var _map = null;
+var _marker = null;
+
+function renderMap(lat, lng, label) {
+  if (!lat || !lng) {
+    setHtml('mapContent', '<div style="color:var(--text3);font-size:13px;padding:16px 0">暂无坐标数据</div>');
+    return;
+  }
+
+  setHtml('mapContent', '<div id="ipMap"></div>');
+
+  /* 等 DOM 插入后再初始化，避免 Leaflet 拿不到容器尺寸 */
+  setTimeout(function() {
+    if (typeof L === 'undefined') return;
+
+    /* 销毁旧地图实例（切换 IP 时重建） */
+    if (_map) {
+      _map.remove();
+      _map = null;
+      _marker = null;
+    }
+
+    _map = L.map('ipMap', {
+      center: [lat, lng],
+      zoom: 10,
+      zoomControl: true,
+      scrollWheelZoom: false,   /* 避免页面滚动被地图劫持 */
+      attributionControl: true
+    });
+
+    /* 苹果风格浅色瓦片 —— CartoDB Positron，无需 Key */
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(_map);
+
+    /* 自定义蓝色圆点 marker，匹配苹果设计语言 */
+    var dotIcon = L.divIcon({
+      className: '',
+      html: '<div style="width:16px;height:16px;border-radius:50%;background:#0071e3;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,113,227,0.5)"></div>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+
+    _marker = L.marker([lat, lng], { icon: dotIcon }).addTo(_map);
+    if (label) {
+      _marker.bindPopup(
+        '<div style="font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:500;color:#1d1d1f;white-space:nowrap">' + label + '</div>',
+        { closeButton: false, offset: [0, -4] }
+      ).openPopup();
+    }
+  }, 50);
+}
+
+function runCheck() {
+  var q = (document.getElementById('ipInput').value || '').replace(/^\s+|\s+$/g, '');
+  currentIP = '';
+  showSkeletons();
+
+  function queryIPDetail(ip) {
+    var url = ip
+      ? 'https://ipapi.co/' + encodeURIComponent(ip) + '/json/'
+      : 'https://ipapi.co/json/';
+
+    httpGet(url, function(d) {
+      if (d.error) {
+        setText('ipDisplay', '无效地址');
+        setHtml('ipTags', '<div class="chip" style="color:#ff3b30">' + (d.reason || '查询失败') + '</div>');
+        return;
+      }
+      currentIP = d.ip;
+      renderIPMeta(d);
+      renderGeo(d);
+      renderASN(d);
+      renderMap(d.latitude, d.longitude, (d.city ? d.city + ', ' : '') + (d.country_name || ''));
+      setTimeout(renderLatency, 360);
+
+      /* 请求 AbuseIPDB 真实数据 */
+      var abuseUrl = 'https://666msapi.haoxzhang.workers.dev/check?ip=' + encodeURIComponent(d.ip);
+      httpGet(abuseUrl, function(abuse) {
+        renderRisk(abuse);
+        renderBL(abuse);
+      }, function() {
+        /* AbuseIPDB 请求失败降级显示空数据 */
+        renderRisk(null);
+        renderBL(null);
+      }, 8000);
+
+    }, function() {
+      setText('ipDisplay', '请求失败');
+      setHtml('ipTags', '<div class="chip" style="color:#ff3b30">网络错误 — 请检查连接后重试</div>');
+      setHtml('geoContent',  '<div style="color:#ff3b30;font-size:13px;padding:8px 0">ipapi.co 暂时无法访问</div>');
+      setHtml('asnContent',  '');
+      setHtml('riskContent', '');
+      setHtml('blContent',   '');
+      setHtml('latContent',  '');
+    });
+  }
+
+  /* 用户输入了具体 IP，直接查 */
+  if (q) {
+    queryIPDetail(q);
+    return;
+  }
+
+  /* 没有输入，先从 Worker 获取真实 IP（IPv4 优先），再查详情 */
+  httpGet('https://666msapi.haoxzhang.workers.dev/', function(data) {
+    queryIPDetail(data.ip || '');
+  }, function() {
+    /* Worker 请求失败则降级，直接让 ipapi.co 自己判断 */
+    queryIPDetail('');
+  }, 5000);
+}
+
+/* 回车触发 */
+document.getElementById('ipInput').addEventListener('keydown', function(e) {
+  var key = e.key || e.keyCode;
+  if (key === 'Enter' || key === 13) runCheck();
+});
+
+/* 页面加载后自动检测 */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runCheck);
+} else {
+  runCheck();
+}
+</script>
+</body>
+</html>
